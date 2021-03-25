@@ -1,16 +1,16 @@
 **What V is planning on Doing:** 
 
-#I. Data Pre-processing 
+# I. Data Pre-processing 
 
 1. randomly select a smaller portion of the data (y'all my computer is a bit old and she be working wayyyy too hard with these large files)
 
 2. We can each randomly select different portions of the data to work on, or we can all agree to work on the same randomly selected portion. Open to thoughts and discussion. 
 
-#II. Data I want to focus on
+# II. Data I want to focus on
 
 The IDs 
 
-#III. Things I want to Explore  // Questions I want to answer 
+# III. Things I want to Explore  // Questions I want to answer 
 
 1. Type of classification 
 
