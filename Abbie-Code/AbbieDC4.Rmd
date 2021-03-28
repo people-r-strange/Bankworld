@@ -14,17 +14,16 @@ library(plotly)
 
 ```{r}
 # Note: using truncated file
-firewall46 <- read_csv("Firewall-04062012.csv",
+firewall46 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04062012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
                        col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
                        skip = 1)
       
 
-firewall47 <- read_csv("Firewall-04072012.csv",
+firewall47 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04072012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
                        col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
                        skip = 1)
-View(firewall47)
 ```
 
 ```{r}
