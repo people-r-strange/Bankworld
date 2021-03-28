@@ -1,0 +1,82 @@
+---
+title: "DC4"
+author: "Abbie Benfield"
+date: "3/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(plotly)
+```
+
+```{r}
+# Note: using truncated file
+firewall46 <- read_csv("Firewall-04062012.csv",
+                       col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
+                       col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
+                       skip = 1)
+      
+
+firewall47 <- read_csv("Firewall-04072012.csv",
+                       col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
+                       col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
+                       skip = 1)
+View(firewall47)
+```
+
+```{r}
+severity_count46 <- firewall46 %>% 
+  group_by(syslog_priority) %>% 
+  count(syslog_priority)
+
+severity_count47 <- firewall47 %>% 
+  group_by(syslog_priority) %>% 
+  count(syslog_priority)
+
+error46 <- firewall46 %>% 
+  filter(syslog_priority == "Error") 
+
+error47 <- firewall47 %>% 
+  filter(syslog_priority == "Error")
+```
+
+```{r}
+source_ports46 <- firewall46 %>% 
+  group_by(source_port) %>% 
+  count(source_port)
+
+dest_ports46 <- firewall46  %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+port_6667_threat46 <- firewall46 %>% 
+  filter(source_port == "6667")
+port_6667_threat47 <- firewall47 %>% 
+  filter(source_port == "6667")
+port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
+```
+
+```{r}
+timestamp_count46 <- firewall46 %>% 
+  group_by(timestamp) %>% 
+  count(timestamp)
+
+timestamp_count47 <- firewall47 %>% 
+  group_by(timestamp) %>% 
+  count(timestamp)
+
+timestamp_plot46 <- ggplot(timestamp_count46, aes(x = timestamp, y = n)) +
+  geom_point()
+# ggplotly(timestamp_plot46)
+  # Too big
+
+timestamp_plot47 <- ggplot(timestamp_count47, aes(x = timestamp, y = n)) +
+  geom_point()
+timestamp_plot47
+
+# ggplotly(timestamp_plot47)
+  # Too big
+```
