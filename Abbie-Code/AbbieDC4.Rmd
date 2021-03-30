@@ -10,8 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(plotly)
+library(skimr)
 ```
 
+# Data Wrangling/Pattern Finding
 ```{r}
 firewall46 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04062012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
@@ -36,14 +38,41 @@ severity_count47 <- firewall47 %>%
 severity_count <- severity_count46 %>% 
   inner_join(severity_count47, by = "syslog_priority") %>% 
   rename(apr_6 = n.x, apr_7 = n.y)
+```
 
+```{r}
 # Error messages
 error46 <- firewall46 %>% 
   filter(syslog_priority == "Error") 
 error47 <- firewall47 %>% 
   filter(syslog_priority == "Error")
 error <- rbind(error46, error47)
+  # Error messages on 4/6 are all potential attacks, but nothing special on 4/7 - only look at 4/6
 
+# Individual source IPs in error messages
+error_ips <- error46  %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
+
+# Individual source ports in error messages
+error_sourceport <- error46 %>% 
+  group_by(source_port) %>% 
+  count(source_port)
+  
+  # Looks at what source port each source IP is using in error messages
+  error_sourceport_ip <- error46 %>% 
+    group_by(source_port) %>% 
+    count(source_ip)
+
+# Individual destination ports in error messages
+error_destport <- error46 %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+# Error IPs
+```
+
+```{r}
 # Critical messages
 critical46 <- firewall46  %>% 
   filter(syslog_priority == "Critical" & source_port != "6667")
@@ -51,6 +80,8 @@ critical47 <- firewall47  %>%
   filter(syslog_priority == "Critical")
 critical <- rbind(critical46, critical47)
 ```
+
+
 
 ```{r}
 # Number of times a source port appears
@@ -71,6 +102,13 @@ port_6667_threat47 <- firewall47 %>%
 port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
 ```
 
+
+
+
+
+
+
+# Visualization
 ```{r}
 # Number of entries at each timestamp
 timestamp_count46 <- firewall46 %>% 
@@ -89,7 +127,6 @@ timestamp_plot46 <- ggplot(timestamp_count46, aes(x = timestamp, y = n)) +
 timestamp_plot47 <- ggplot(timestamp_count47, aes(x = timestamp, y = n)) +
   geom_point()
 timestamp_plot47
-
 # ggplotly(timestamp_plot47)
   # Too big
 ```
