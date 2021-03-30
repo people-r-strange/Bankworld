@@ -13,7 +13,6 @@ library(plotly)
 ```
 
 ```{r}
-# Note: using truncated file
 firewall46 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04062012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
                        col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
@@ -27,30 +26,44 @@ firewall47 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235
 ```
 
 ```{r}
+# Distribution of severity
 severity_count46 <- firewall46 %>% 
   group_by(syslog_priority) %>% 
   count(syslog_priority)
-
 severity_count47 <- firewall47 %>% 
   group_by(syslog_priority) %>% 
   count(syslog_priority)
+severity_count <- severity_count46 %>% 
+  inner_join(severity_count47, by = "syslog_priority") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y)
 
+# Error messages
 error46 <- firewall46 %>% 
   filter(syslog_priority == "Error") 
-
 error47 <- firewall47 %>% 
   filter(syslog_priority == "Error")
+error <- rbind(error46, error47)
+
+# Critical messages
+critical46 <- firewall46  %>% 
+  filter(syslog_priority == "Critical" & source_port != "6667")
+critical47 <- firewall47  %>% 
+  filter(syslog_priority == "Critical")
+critical <- rbind(critical46, critical47)
 ```
 
 ```{r}
+# Number of times a source port appears
 source_ports46 <- firewall46 %>% 
   group_by(source_port) %>% 
   count(source_port)
 
+# Number of times a destination port appears
 dest_ports46 <- firewall46  %>% 
   group_by(dest_port) %>% 
   count(dest_port)
 
+# Analysis of Port 6667 which is a port known for trojan horse attacks
 port_6667_threat46 <- firewall46 %>% 
   filter(source_port == "6667")
 port_6667_threat47 <- firewall47 %>% 
@@ -59,6 +72,7 @@ port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
 ```
 
 ```{r}
+# Number of entries at each timestamp
 timestamp_count46 <- firewall46 %>% 
   group_by(timestamp) %>% 
   count(timestamp)
