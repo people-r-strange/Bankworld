@@ -70,6 +70,39 @@ error_destport <- error46 %>%
   count(dest_port)
 
 # Error IPs
+ip_172.23.231.69_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.231.69")
+ip_172.23.231.69_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.231.69")
+ip_172.23.231.69 <- rbind(ip_172.23.231.69_46,ip_172.23.231.69_47)
+
+
+ip_172.23.232.4_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.232.4")
+ip_172.23.232.4_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.232.4")
+ip_172.23.232.4 <- rbind(ip_172.23.232.4_46, ip_172.23.232.4_47)
+
+
+ip_172.23.234.58_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.234.58")
+ip_172.23.234.58_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.234.58")
+ip_172.23.234.58 <- rbind(ip_172.23.234.58_46, ip_172.23.234.58_47)
+
+
+ip_172.23.236.8_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.236.8")
+ip_172.23.236.8_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.236.8")
+ip_172.23.236.8 <- rbind(ip_172.23.236.8_46, ip_172.23.236.8_47)
+
+
+ip_172.23.240.156_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.240.156")
+ip_172.23.240.156_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.240.156")
+ip_172.23.240.156 <- rbind(ip_172.23.240.156_46, ip_172.23.240.156_47)
 ```
 
 ```{r}
@@ -81,6 +114,22 @@ critical47 <- firewall47  %>%
 critical <- rbind(critical46, critical47)
 ```
 
+```{r}
+# Message Code 106015: “Recommended Action: None required unless the ASA receives a large volume of these invalid TCP packets. If this is the case, trace the packets to the source and determine the reason these packets were sent.”
+
+code_106015_46 <- firewall46 %>% 
+  filter(message_code == "ASA-6-106015")
+code_106015_47 <- firewall47 %>% 
+  filter(message_code == "ASA-6-106015")
+
+
+service_code_106015_46 <- code_106015_46 %>% 
+  group_by(dest_service) %>%
+  count(dest_service)
+service_code_106015_47 <- code_106015_47 %>% 
+  group_by(dest_service) %>%
+  count(dest_service)
+```
 
 
 ```{r}
