@@ -41,6 +41,25 @@ severity_count <- severity_count46 %>%
 ```
 
 ```{r}
+# Critical messages
+critical46 <- firewall46  %>% 
+  filter(syslog_priority == "Critical")
+critical47 <- firewall47  %>% 
+  filter(syslog_priority == "Critical")
+critical <- rbind(critical46, critical47)
+
+# Critical messages that do not originate from port 6667
+non6667_critical <- critical %>% 
+  filter(source_port != "6667")
+
+# Individual source IPs in critical messages
+critical_sourceips <- critical %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
+```
+
+
+```{r}
 # Error messages
 error46 <- firewall46 %>% 
   filter(syslog_priority == "Error") 
@@ -105,14 +124,7 @@ ip_172.23.240.156_47	<- firewall47 %>%
 ip_172.23.240.156 <- rbind(ip_172.23.240.156_46, ip_172.23.240.156_47)
 ```
 
-```{r}
-# Critical messages
-critical46 <- firewall46  %>% 
-  filter(syslog_priority == "Critical" & source_port != "6667")
-critical47 <- firewall47  %>% 
-  filter(syslog_priority == "Critical")
-critical <- rbind(critical46, critical47)
-```
+
 
 ```{r}
 # Message Code 106015: “Recommended Action: None required unless the ASA receives a large volume of these invalid TCP packets. If this is the case, trace the packets to the source and determine the reason these packets were sent.”
@@ -151,6 +163,19 @@ port_6667_threat47 <- firewall47 %>%
 port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
 ```
 
+```{r}
+# Dest_services
+dest_service46 <- firewall46 %>% 
+  group_by(dest_service) %>% 
+  count(dest_service)
+dest_service47 <- firewall47 %>% 
+  group_by(dest_service) %>% 
+  count(dest_service)
+dest_service <- dest_service46 %>% 
+  full_join(dest_service47, by = "dest_service") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+```
 
 
 
