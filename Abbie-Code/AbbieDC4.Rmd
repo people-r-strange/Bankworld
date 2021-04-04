@@ -232,7 +232,7 @@ bad_ports <- rbind(bad_ports46, bad_ports47)
 
 # Visualization
 ```{r}
-# Number of entries at each timestamp
+# Timestamp Vizualization
 timestamp_count46 <- firewall46 %>% 
   group_by(timestamp) %>% 
   count(timestamp)
@@ -243,17 +243,15 @@ timestamp_count47 <- firewall47 %>%
 
 timestamp_plot46 <- ggplot(timestamp_count46, aes(x = timestamp, y = n)) +
   geom_point()
-# ggplotly(timestamp_plot46)
-  # Too big
+timestamp_plot46
 
 timestamp_plot47 <- ggplot(timestamp_count47, aes(x = timestamp, y = n)) +
   geom_point()
 timestamp_plot47
-# ggplotly(timestamp_plot47)
-  # Too big
 ```
 
 ```{r}
+# Critical Messages Vizualization
 critical_count1 <- critical %>%
   group_by(source_port) %>%
   count(source_port) %>% 
@@ -274,45 +272,15 @@ critical_count <- rbind(data.frame(critical_count1), sum)
 
 critical_plot <- ggplot(critical_count, aes(x = source_port, y = n)) +
   geom_col() +
-  labs(title = "Breakdown of Critical Messages by Source Port", x = "Source Port", y = "Number of Occurences")
+  labs(title = "Breakdown of Critical Messages by Source Port", x = "Source Port", y = "Number of Occurences") +
+  geom_text(aes(label = n, vjust = -.2))
 
 critical_plot
 ```
 
-```{r}
-# count <- all_sus_ips %>% 
-#   mutate(timestamp = as.POSIXct(timestamp)) %>% 
-#   group_by(source_ip, byMin = cut(timestamp, "1 min")) %>% 
-#   summarize(count = n())
-# 
-# plot <- ggplot(count, aes(x = byMin, y = count)) +
-#   geom_point() +
-#   facet_wrap(~source_ip)
-# plot
-
-# sus_ip_count <- all_sus_ips %>%
-#   group_by(source_ip, timestamp) %>%
-#   count(timestamp)
-# 
-# sus_ip_plot <- ggplot(sus_ip_count, aes(x = timestamp, y = n)) +
-#   geom_line() +
-#   geom_smooth()
-# sus_ip_plot
-
-
-```
 
 ```{r}
-bad_port_count <- bad_ports %>% 
-  group_by(dest_port, dest_service) %>% 
-  count(dest_port)
-
-bad_port_plot <- ggplot(bad_port_count, aes(x = dest_service, y = n)) + 
-  geom_col()
-bad_port_plot
-```
-
-```{r}
+# Error Message Visualization
 error46_count <- error46 %>% 
   group_by(timestamp) %>% 
   count(timestamp)
@@ -323,10 +291,32 @@ error_plot <- ggplot(error46, aes(x = timestamp, y = dest_port, color = source_i
   labs(title = "Breakdown of 4/6 Error Messages by Time and Source IP Address", x = "Timestamp", y = "Destination Port Number", color = "Source IP Address") +
   scale_y_discrete(labels = c("161" = "161 (SNMP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)", "443" = "443 (HTTPS)", "80" = "80 (HTTP)"))
 ggplotly(error_plot)
+
+error_plot2 <- ggplot(error46, aes(x = dest_port, y = source_port)) +
+  geom_point()
+error_plot2
 ```
 
+```{r}
+# Forbidden Services Visualization
+bad_port_count <- bad_ports %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+bad_port_plot <- ggplot(bad_port_count, aes(x = dest_port, y = n)) + 
+  geom_col() + 
+  labs(title = "Entries with Destination Ports Whose Service Is Forbidden By Company", x = "Destination Port", y = "Count") +
+  scale_x_discrete(labels = c("161" = "161 (SNMP)", "21" = "21 (FTP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)"))
+bad_port_plot
+
+```
 
 ```{r}
-critical_
+# Suspicious IP Visualization
+sus_ip_plot <- ggplot(sus_ip_destport, aes(x = dest_port, y = n)) +
+  geom_col() +
+  geom_text(aes(label = n, vjust = -.2)) +
+  labs(title = "Breakdown of Destination Ports for 5 Suspicious IPs Found in Error Messages", x = "Destination Port", y = "Count")
+sus_ip_plot
 ```
 
