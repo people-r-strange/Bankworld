@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(plotly)
 library(skimr)
+library(lubridate)
 ```
 
 # Data Wrangling/Pattern Finding
@@ -122,6 +123,13 @@ ip_172.23.240.156_46	<- firewall46 %>%
 ip_172.23.240.156_47	<- firewall47 %>% 
   filter(source_ip == "172.23.240.156")
 ip_172.23.240.156 <- rbind(ip_172.23.240.156_46, ip_172.23.240.156_47)
+
+
+sus_ips_46 <- firewall46 %>% 
+  filter(source_ip == "172.23.231.69" | source_ip == "172.23.232.4" | source_ip == "172.23.234.58" | source_ip == "172.23.236.8" | source_ip == "172.23.240.156")
+sus_ips_47 <- firewall47 %>% 
+  filter(source_ip == "172.23.231.69" | source_ip == "172.23.232.4" | source_ip == "172.23.234.58" | source_ip == "172.23.236.8" | source_ip == "172.23.240.156")
+all_sus_ips <- rbind(sus_ips_46, sus_ips_47)
 ```
 
 
@@ -161,6 +169,8 @@ port_6667_threat46 <- firewall46 %>%
 port_6667_threat47 <- firewall47 %>% 
   filter(source_port == "6667")
 port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
+
+port_6667_threat
 ```
 
 ```{r}
@@ -176,6 +186,24 @@ dest_service <- dest_service46 %>%
   rename(apr_6 = n.x, apr_7 = n.y) %>% 
   replace(is.na(.), 0)
 ```
+
+```{r}
+odd_ips_46 <- firewall46 %>% 
+  filter(!grepl("172.", dest_ip) & !grepl("10.", dest_ip) & dest_ip != "(empty)")
+
+View(odd_ips_46)
+         
+odd_ips_47 <- firewall47 %>% 
+  filter(!grepl("172.", dest_ip) & !grepl("10.", dest_ip) & dest_ip != "(empty)")
+
+View(odd_ips_47)
+
+fin_firewall47 <- firewall47 %>% 
+  filter(grepl("172.23.220", source_ip) | grepl("172.23.220", dest_ip))
+
+View(fin_firewall47)
+```
+
 
 
 
@@ -204,3 +232,40 @@ timestamp_plot47
 # ggplotly(timestamp_plot47)
   # Too big
 ```
+
+```{r}
+# critical_count <- critical %>% 
+#   group_by(timestamp) %>% 
+#   count(timestamp)
+# 
+# critical_plot <- ggplot(critical_count, aes(x = timestamp, y = n)) +
+#   geom_point()
+# 
+# critical_plot
+```
+
+```{r}
+# count <- all_sus_ips %>% 
+#   mutate(timestamp = as.POSIXct(timestamp)) %>% 
+#   group_by(source_ip, byMin = cut(timestamp, "1 min")) %>% 
+#   summarize(count = n())
+# 
+# plot <- ggplot(count, aes(x = byMin, y = count)) +
+#   geom_point() +
+#   facet_wrap(~source_ip)
+# plot
+
+# sus_ip_count <- all_sus_ips %>% 
+#   group_by(source_ip, timestamp, syslog_priority) %>%
+#   filter(syslog_priority != "Info") %>% 
+#   count(timestamp)
+# 
+# sus_ip_plot <- ggplot(sus_ip_count, aes(x = timestamp, y = n, color = source_ip)) +
+#   geom_line()
+# sus_ip_plot
+                        
+              
+```
+
+
+
