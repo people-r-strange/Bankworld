@@ -130,6 +130,10 @@ sus_ips_46 <- firewall46 %>%
 sus_ips_47 <- firewall47 %>% 
   filter(source_ip == "172.23.231.69" | source_ip == "172.23.232.4" | source_ip == "172.23.234.58" | source_ip == "172.23.236.8" | source_ip == "172.23.240.156")
 all_sus_ips <- rbind(sus_ips_46, sus_ips_47)
+
+sus_ip_destport <- all_sus_ips %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
 ```
 
 
@@ -158,19 +162,47 @@ source_ports46 <- firewall46 %>%
   group_by(source_port) %>% 
   count(source_port)
 
+source_ports47 <- firewall47 %>% 
+  group_by(source_port) %>% 
+  count(source_port)
+
+source_ports <- source_ports46 %>% 
+  full_join(source_ports47, by = "source_port") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+
 # Number of times a destination port appears
 dest_ports46 <- firewall46  %>% 
   group_by(dest_port) %>% 
   count(dest_port)
 
-# Analysis of Port 6667 which is a port known for trojan horse attacks
-port_6667_threat46 <- firewall46 %>% 
-  filter(source_port == "6667")
-port_6667_threat47 <- firewall47 %>% 
-  filter(source_port == "6667")
-port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
+dest_ports47 <- firewall47  %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
 
-port_6667_threat
+dest_ports <- dest_ports46 %>% 
+  full_join(dest_ports47, by = "dest_port") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+
+# Analysis of Port 6667 which is a port known for trojan horse attacks
+port_6667_source46 <- firewall46 %>% 
+  filter(source_port == "6667")
+port_6667_source47 <- firewall47 %>% 
+  filter(source_port == "6667")
+port_6667_source <- rbind(port_6667_source46, port_6667_source47)
+
+port_6667_dest46 <- firewall46 %>% 
+  filter(dest_port == "6667")
+port_6667_dest47 <- firewall47 %>% 
+  filter(dest_port == "6667")
+port_6667_dest <- rbind(port_6667_dest46, port_6667_dest47)
+
+port_6667 <- rbind(port_6667_source, port_6667_dest)
+
+port_6667_asdest_ips <- port_6667_dest %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
 ```
 
 ```{r}
@@ -186,28 +218,6 @@ dest_service <- dest_service46 %>%
   rename(apr_6 = n.x, apr_7 = n.y) %>% 
   replace(is.na(.), 0)
 ```
-
-```{r}
-odd_ips_46 <- firewall46 %>% 
-  filter(!grepl("172.", dest_ip) & !grepl("10.", dest_ip) & dest_ip != "(empty)")
-
-View(odd_ips_46)
-         
-odd_ips_47 <- firewall47 %>% 
-  filter(!grepl("172.", dest_ip) & !grepl("10.", dest_ip) & dest_ip != "(empty)")
-
-View(odd_ips_47)
-
-fin_firewall47 <- firewall47 %>% 
-  filter(grepl("172.23.220", source_ip) | grepl("172.23.220", dest_ip))
-
-View(fin_firewall47)
-```
-
-
-
-
-
 
 
 # Visualization
