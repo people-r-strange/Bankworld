@@ -12,6 +12,7 @@ library(tidyverse)
 library(plotly)
 library(skimr)
 library(lubridate)
+library(highlight)
 ```
 
 # Data Wrangling/Pattern Finding
@@ -217,6 +218,15 @@ dest_service <- dest_service46 %>%
   full_join(dest_service47, by = "dest_service") %>% 
   rename(apr_6 = n.x, apr_7 = n.y) %>% 
   replace(is.na(.), 0)
+
+# Forbidden ports (i.e. for using telnet, FTP, etc)
+bad_ports46 <- firewall46 %>% 
+  filter(dest_port == "20" | dest_port == "21" | dest_port == "22" | dest_port == "23" | dest_port == "161")
+
+bad_ports47 <- firewall47 %>% 
+  filter(dest_port == "20" | dest_port == "21" | dest_port == "22" | dest_port == "23" | dest_port == "161")
+
+bad_ports <- rbind(bad_ports46, bad_ports47)
 ```
 
 
@@ -244,14 +254,29 @@ timestamp_plot47
 ```
 
 ```{r}
-# critical_count <- critical %>% 
-#   group_by(timestamp) %>% 
-#   count(timestamp)
-# 
-# critical_plot <- ggplot(critical_count, aes(x = timestamp, y = n)) +
-#   geom_point()
-# 
-# critical_plot
+critical_count1 <- critical %>%
+  group_by(source_port) %>%
+  count(source_port) %>% 
+  filter(source_port == "6667")
+
+critical_count2 <- critical %>%
+  group_by(source_port) %>%
+  filter(source_port != "6667") %>% 
+  count(source_port) 
+
+sum <- data.frame(sum(critical_count2$n))
+sum <- sum %>% 
+  mutate(source_port = "Non-6667 Ports") %>% 
+  rename(n = sum.critical_count2.n.) %>% 
+  select(source_port, n)
+
+critical_count <- rbind(data.frame(critical_count1), sum)
+
+critical_plot <- ggplot(critical_count, aes(x = source_port, y = n)) +
+  geom_col() +
+  labs(title = "Breakdown of Critical Messages by Source Port", x = "Source Port", y = "Number of Occurences")
+
+critical_plot
 ```
 
 ```{r}
@@ -265,17 +290,43 @@ timestamp_plot47
 #   facet_wrap(~source_ip)
 # plot
 
-# sus_ip_count <- all_sus_ips %>% 
-#   group_by(source_ip, timestamp, syslog_priority) %>%
-#   filter(syslog_priority != "Info") %>% 
+# sus_ip_count <- all_sus_ips %>%
+#   group_by(source_ip, timestamp) %>%
 #   count(timestamp)
 # 
-# sus_ip_plot <- ggplot(sus_ip_count, aes(x = timestamp, y = n, color = source_ip)) +
-#   geom_line()
+# sus_ip_plot <- ggplot(sus_ip_count, aes(x = timestamp, y = n)) +
+#   geom_line() +
+#   geom_smooth()
 # sus_ip_plot
-                        
-              
+
+
+```
+
+```{r}
+bad_port_count <- bad_ports %>% 
+  group_by(dest_port, dest_service) %>% 
+  count(dest_port)
+
+bad_port_plot <- ggplot(bad_port_count, aes(x = dest_service, y = n)) + 
+  geom_col()
+bad_port_plot
+```
+
+```{r}
+error46_count <- error46 %>% 
+  group_by(timestamp) %>% 
+  count(timestamp)
+
+error_plot <- ggplot(error46, aes(x = timestamp, y = dest_port, color = source_ip)) +
+  geom_jitter(height = .25) + 
+  scale_color_manual(values = c("#7700F5", "#FE0072", "#288600", "#FF9B00", "#00A5F5")) + 
+  labs(title = "Breakdown of 4/6 Error Messages by Time and Source IP Address", x = "Timestamp", y = "Destination Port Number", color = "Source IP Address") +
+  scale_y_discrete(labels = c("161" = "161 (SNMP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)", "443" = "443 (HTTPS)", "80" = "80 (HTTP)"))
+ggplotly(error_plot)
 ```
 
 
+```{r}
+critical_
+```
 
