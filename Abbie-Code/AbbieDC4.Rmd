@@ -1,7 +1,7 @@
 ---
 title: "DC4"
 author: "Abbie Benfield"
-date: "3/25/2021"
+date: "4/5/2021"
 output: html_document
 ---
 
@@ -16,6 +16,7 @@ library(highlight)
 ```
 
 # Data Wrangling/Pattern Finding
+## Replace File Paths Before Running
 ```{r}
 firewall46 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04062012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
@@ -288,13 +289,14 @@ error46_count <- error46 %>%
 error_plot <- ggplot(error46, aes(x = timestamp, y = dest_port, color = source_ip)) +
   geom_jitter(height = .25) + 
   scale_color_manual(values = c("#7700F5", "#FE0072", "#288600", "#FF9B00", "#00A5F5")) + 
-  labs(title = "Breakdown of 4/6 Error Messages by Time and Source IP Address", x = "Timestamp", y = "Destination Port Number", color = "Source IP Address") +
+  labs(title = "4/6 Error Messages by Time and Source IP Address", x = "Timestamp", y = "Destination Port Number", color = "Source IP Address") +
   scale_y_discrete(labels = c("161" = "161 (SNMP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)", "443" = "443 (HTTPS)", "80" = "80 (HTTP)"))
 ggplotly(error_plot)
 
 error_plot2 <- ggplot(error46, aes(x = dest_port, y = source_port)) +
   geom_point()
 error_plot2
+  # Shows how each source port tries each destination port exactly once
 ```
 
 ```{r}
