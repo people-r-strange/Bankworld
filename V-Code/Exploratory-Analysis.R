@@ -63,11 +63,14 @@ ggplot(IDS_0407, aes(x=classification, fill=as.factor(priority))) +
 ggplot(IDS, aes(x=classification, fill=as.factor(priority))) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Classification and Number of Error Messages on April 5 - 7 ", 
+  labs(title = "Classification and Number of Syslog Messages on April 5 - 7 ", 
        y = "Count", 
        x = "Classification Type") +
   scale_fill_discrete(
-    name = "Priority Level")
+    name = "Priority Level", 
+    labels=c("1: Alert",
+           "2: Critical",
+           "3: Error"))
 
 #Timeline April 7
 ggplot(IDS_0407, aes(x=time, y= classification, color=as.factor(priority))) +
@@ -82,7 +85,7 @@ ggplot(IDS_0407, aes(x=time, y= classification, color=as.factor(priority))) +
 t <- ggplot(IDS, aes(x=time, y= classification, color=as.factor(priority))) +
   geom_point() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Timeline of Error Messages on April 5 - 7 ", 
+  labs(title = "Timeline of High Priority Syslog Messages on April 5 - 7 ", 
        y = "Classification Type", 
        x = "Time",
        fill = "Priority Level") 
