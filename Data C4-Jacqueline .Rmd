@@ -1,0 +1,46 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(texreg)
+library(dotwhisker)
+library(dplyr)
+df <- read.csv("IDS-0406-updated.csv")
+```
+
+### Identidy classifications of the violations
+
+```{r code-chunk-label}
+d1 <- subset(df, df$classification == " Generic Protocol Command Decode")
+d1
+d2 <- subset(df, df$classification == " Potential Corporate Privacy Violation")
+d2
+d3 <- subset(df, df$classification == " Misc activity")
+d3
+d4 <- subset(df, df$classification == " Attempted Information Leak")
+d4
+d5 <- subset(df, df$classification == " Potentially Bad Traffic")
+d5
+
+#Generic Protocol Command Decode & Potential Corporate Privacy Violation &  Misc activity & Attempted Information Leak & Potentially Bad Traffic
+```
+
+### Distribution
+```{r }
+df<-separate(df, time, c("date", "time"), sep = " ")
+ggplot(data=df, aes(x=date)) + geom_bar()
+
+
+```
+```{r}
+ggplot(data=df, aes(x=time, y=classification)) + geom_point()
+```
+
+...
+
