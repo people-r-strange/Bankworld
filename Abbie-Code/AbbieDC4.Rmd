@@ -1,7 +1,7 @@
 ---
 title: "DC4"
 author: "Abbie Benfield"
-date: "3/25/2021"
+date: "4/5/2021"
 output: html_document
 ---
 
@@ -10,10 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(plotly)
+library(skimr)
+library(lubridate)
+library(highlight)
 ```
 
+# Data Wrangling/Pattern Finding
+## Replace File Paths Before Running
 ```{r}
-# Note: using truncated file
 firewall46 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235/SDS235-DC4/Firewall-04062012.csv",
                        col_names = c("timestamp", "syslog_priority", "operation", "message_code", "protocol", "source_ip", "dest_ip", "source_hostname", "dest_hostname", "source_port", "dest_port", "dest_service", "direction", "connections_built", "connections_torn_down"), 
                        col_types = cols(timestamp = col_datetime(format = "%d/%b/%Y %H:%M:%S")),
@@ -27,38 +31,209 @@ firewall47 <- read_csv("/Users/Abbie/OneDrive - Smith College/Spring 2021/SDS235
 ```
 
 ```{r}
+# Distribution of severity
 severity_count46 <- firewall46 %>% 
   group_by(syslog_priority) %>% 
   count(syslog_priority)
-
 severity_count47 <- firewall47 %>% 
   group_by(syslog_priority) %>% 
   count(syslog_priority)
-
-error46 <- firewall46 %>% 
-  filter(syslog_priority == "Error") 
-
-error47 <- firewall47 %>% 
-  filter(syslog_priority == "Error")
+severity_count <- severity_count46 %>% 
+  inner_join(severity_count47, by = "syslog_priority") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y)
 ```
 
 ```{r}
+# Critical messages
+critical46 <- firewall46  %>% 
+  filter(syslog_priority == "Critical")
+critical47 <- firewall47  %>% 
+  filter(syslog_priority == "Critical")
+critical <- rbind(critical46, critical47)
+
+# Critical messages that do not originate from port 6667
+non6667_critical <- critical %>% 
+  filter(source_port != "6667")
+
+# Individual source IPs in critical messages
+critical_sourceips <- critical %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
+```
+
+
+```{r}
+# Error messages
+error46 <- firewall46 %>% 
+  filter(syslog_priority == "Error") 
+error47 <- firewall47 %>% 
+  filter(syslog_priority == "Error")
+error <- rbind(error46, error47)
+  # Error messages on 4/6 are all potential attacks, but nothing special on 4/7 - only look at 4/6
+
+# Individual source IPs in error messages
+error_ips <- error46  %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
+
+# Individual source ports in error messages
+error_sourceport <- error46 %>% 
+  group_by(source_port) %>% 
+  count(source_port)
+  
+  # Looks at what source port each source IP is using in error messages
+  error_sourceport_ip <- error46 %>% 
+    group_by(source_port) %>% 
+    count(source_ip)
+
+# Individual destination ports in error messages
+error_destport <- error46 %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+# Error IPs
+ip_172.23.231.69_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.231.69")
+ip_172.23.231.69_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.231.69")
+ip_172.23.231.69 <- rbind(ip_172.23.231.69_46,ip_172.23.231.69_47)
+
+
+ip_172.23.232.4_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.232.4")
+ip_172.23.232.4_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.232.4")
+ip_172.23.232.4 <- rbind(ip_172.23.232.4_46, ip_172.23.232.4_47)
+
+
+ip_172.23.234.58_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.234.58")
+ip_172.23.234.58_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.234.58")
+ip_172.23.234.58 <- rbind(ip_172.23.234.58_46, ip_172.23.234.58_47)
+
+
+ip_172.23.236.8_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.236.8")
+ip_172.23.236.8_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.236.8")
+ip_172.23.236.8 <- rbind(ip_172.23.236.8_46, ip_172.23.236.8_47)
+
+
+ip_172.23.240.156_46	<- firewall46 %>% 
+  filter(source_ip == "172.23.240.156")
+ip_172.23.240.156_47	<- firewall47 %>% 
+  filter(source_ip == "172.23.240.156")
+ip_172.23.240.156 <- rbind(ip_172.23.240.156_46, ip_172.23.240.156_47)
+
+
+sus_ips_46 <- firewall46 %>% 
+  filter(source_ip == "172.23.231.69" | source_ip == "172.23.232.4" | source_ip == "172.23.234.58" | source_ip == "172.23.236.8" | source_ip == "172.23.240.156")
+sus_ips_47 <- firewall47 %>% 
+  filter(source_ip == "172.23.231.69" | source_ip == "172.23.232.4" | source_ip == "172.23.234.58" | source_ip == "172.23.236.8" | source_ip == "172.23.240.156")
+all_sus_ips <- rbind(sus_ips_46, sus_ips_47)
+
+sus_ip_destport <- all_sus_ips %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+```
+
+
+
+```{r}
+# Message Code 106015: “Recommended Action: None required unless the ASA receives a large volume of these invalid TCP packets. If this is the case, trace the packets to the source and determine the reason these packets were sent.”
+
+code_106015_46 <- firewall46 %>% 
+  filter(message_code == "ASA-6-106015")
+code_106015_47 <- firewall47 %>% 
+  filter(message_code == "ASA-6-106015")
+
+
+service_code_106015_46 <- code_106015_46 %>% 
+  group_by(dest_service) %>%
+  count(dest_service)
+service_code_106015_47 <- code_106015_47 %>% 
+  group_by(dest_service) %>%
+  count(dest_service)
+```
+
+
+```{r}
+# Number of times a source port appears
 source_ports46 <- firewall46 %>% 
   group_by(source_port) %>% 
   count(source_port)
 
+source_ports47 <- firewall47 %>% 
+  group_by(source_port) %>% 
+  count(source_port)
+
+source_ports <- source_ports46 %>% 
+  full_join(source_ports47, by = "source_port") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+
+# Number of times a destination port appears
 dest_ports46 <- firewall46  %>% 
   group_by(dest_port) %>% 
   count(dest_port)
 
-port_6667_threat46 <- firewall46 %>% 
+dest_ports47 <- firewall47  %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+dest_ports <- dest_ports46 %>% 
+  full_join(dest_ports47, by = "dest_port") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+
+# Analysis of Port 6667 which is a port known for trojan horse attacks
+port_6667_source46 <- firewall46 %>% 
   filter(source_port == "6667")
-port_6667_threat47 <- firewall47 %>% 
+port_6667_source47 <- firewall47 %>% 
   filter(source_port == "6667")
-port_6667_threat <- rbind(port_6667_threat46, port_6667_threat47)
+port_6667_source <- rbind(port_6667_source46, port_6667_source47)
+
+port_6667_dest46 <- firewall46 %>% 
+  filter(dest_port == "6667")
+port_6667_dest47 <- firewall47 %>% 
+  filter(dest_port == "6667")
+port_6667_dest <- rbind(port_6667_dest46, port_6667_dest47)
+
+port_6667 <- rbind(port_6667_source, port_6667_dest)
+
+port_6667_asdest_ips <- port_6667_dest %>% 
+  group_by(source_ip) %>% 
+  count(source_ip)
 ```
 
 ```{r}
+# Dest_services
+dest_service46 <- firewall46 %>% 
+  group_by(dest_service) %>% 
+  count(dest_service)
+dest_service47 <- firewall47 %>% 
+  group_by(dest_service) %>% 
+  count(dest_service)
+dest_service <- dest_service46 %>% 
+  full_join(dest_service47, by = "dest_service") %>% 
+  rename(apr_6 = n.x, apr_7 = n.y) %>% 
+  replace(is.na(.), 0)
+
+# Forbidden ports (i.e. for using telnet, FTP, etc)
+bad_ports46 <- firewall46 %>% 
+  filter(dest_port == "20" | dest_port == "21" | dest_port == "22" | dest_port == "23" | dest_port == "161")
+
+bad_ports47 <- firewall47 %>% 
+  filter(dest_port == "20" | dest_port == "21" | dest_port == "22" | dest_port == "23" | dest_port == "161")
+
+bad_ports <- rbind(bad_ports46, bad_ports47)
+```
+
+
+# Visualization
+```{r}
+# Timestamp Vizualization
 timestamp_count46 <- firewall46 %>% 
   group_by(timestamp) %>% 
   count(timestamp)
@@ -69,13 +244,81 @@ timestamp_count47 <- firewall47 %>%
 
 timestamp_plot46 <- ggplot(timestamp_count46, aes(x = timestamp, y = n)) +
   geom_point()
-# ggplotly(timestamp_plot46)
-  # Too big
+timestamp_plot46
 
 timestamp_plot47 <- ggplot(timestamp_count47, aes(x = timestamp, y = n)) +
   geom_point()
 timestamp_plot47
-
-# ggplotly(timestamp_plot47)
-  # Too big
 ```
+
+```{r}
+# Critical Messages Vizualization
+critical_count1 <- critical %>%
+  group_by(source_port) %>%
+  count(source_port) %>% 
+  filter(source_port == "6667")
+
+critical_count2 <- critical %>%
+  group_by(source_port) %>%
+  filter(source_port != "6667") %>% 
+  count(source_port) 
+
+sum <- data.frame(sum(critical_count2$n))
+sum <- sum %>% 
+  mutate(source_port = "Non-6667 Ports") %>% 
+  rename(n = sum.critical_count2.n.) %>% 
+  select(source_port, n)
+
+critical_count <- rbind(data.frame(critical_count1), sum)
+
+critical_plot <- ggplot(critical_count, aes(x = source_port, y = n)) +
+  geom_col() +
+  labs(title = "Breakdown of Critical Messages by Source Port", x = "Source Port", y = "Number of Occurences") +
+  geom_text(aes(label = n, vjust = -.2))
+
+critical_plot
+```
+
+
+```{r}
+# Error Message Visualization
+error46_count <- error46 %>% 
+  group_by(timestamp) %>% 
+  count(timestamp)
+
+error_plot <- ggplot(error46, aes(x = timestamp, y = dest_port, color = source_ip)) +
+  geom_jitter(height = .25) + 
+  scale_color_manual(values = c("#7700F5", "#FE0072", "#288600", "#FF9B00", "#00A5F5")) + 
+  labs(title = "4/6 Error Messages by Time and Source IP Address", x = "Timestamp", y = "Destination Port Number", color = "Source IP Address") +
+  scale_y_discrete(labels = c("161" = "161 (SNMP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)", "443" = "443 (HTTPS)", "80" = "80 (HTTP)"))
+ggplotly(error_plot)
+
+error_plot2 <- ggplot(error46, aes(x = dest_port, y = source_port)) +
+  geom_point()
+error_plot2
+  # Shows how each source port tries each destination port exactly once
+```
+
+```{r}
+# Forbidden Services Visualization
+bad_port_count <- bad_ports %>% 
+  group_by(dest_port) %>% 
+  count(dest_port)
+
+bad_port_plot <- ggplot(bad_port_count, aes(x = dest_port, y = n)) + 
+  geom_col() + 
+  labs(title = "Entries with Destination Ports Whose Service Is Forbidden By Company", x = "Destination Port", y = "Count") +
+  scale_x_discrete(labels = c("161" = "161 (SNMP)", "21" = "21 (FTP)", "22" = "22 (Secure Shell)", "23" = "23 (telnet)"))
+bad_port_plot
+
+```
+
+```{r}
+# Suspicious IP Visualization
+sus_ip_plot <- ggplot(sus_ip_destport, aes(x = dest_port, y = n)) +
+  geom_col() +
+  geom_text(aes(label = n, vjust = -.2)) +
+  labs(title = "Breakdown of Destination Ports for 5 Suspicious IPs Found in Error Messages", x = "Destination Port", y = "Count")
+sus_ip_plot
+```
+
