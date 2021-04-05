@@ -5,12 +5,19 @@ library(plotly)
 ##Read in ID csv
 IDS_0406 <- read_excel("IDS/IDS-0406.xlsx")
 
-IDS_0407 <- read_excel("IDS/IDS-0407.xlsx")
+IDS_0406 <- read_excel("IDS/IDS-0407.xlsx")
+
+##join ID csv
+IDS <- bind_rows(IDS_0406, IDS_0407)
 
 #Filter out Source IP 6667 for April 6
 
 sourcePort_6667_0406 <- IDS_0406%>%
   filter(sourcePort == "6667")
+
+#Filter out the non-6667 source IPs
+non_sourcePort_6667 <- IDS_0406%>%
+  filter(sourcePort != "6667")
 
 #Filter out Source IP 6667 for April 7
 
@@ -32,16 +39,55 @@ sourcePort_6667_0407 <- IDS_0407%>%
        x = "Classification Type") +
   scale_fill_discrete(
     name = "Priority Level")
+
+#Timeline April 6
+ggplot(IDS_0406, aes(x=time, y= classification, color=as.factor(priority))) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Timeline of Error Messages on April 6th ", 
+       y = "Classification Type", 
+       x = "Time",
+       fill = "Priority Level") 
   
 #April 7 
 ggplot(IDS_0407, aes(x=classification, fill=as.factor(priority))) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Classification and Number of Error Messages on April 7th ", 
+  labs(title = "Classification and Number of Error Messages on April 6th - April 7th ", 
        y = "Count", 
        x = "Classification Type") +
   scale_fill_discrete(
     name = "Priority Level")
+
+#Classification for entire Timeline
+ggplot(IDS, aes(x=classification, fill=as.factor(priority))) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Classification and Number of Error Messages on April 5 - 7 ", 
+       y = "Count", 
+       x = "Classification Type") +
+  scale_fill_discrete(
+    name = "Priority Level")
+
+#Timeline April 7
+ggplot(IDS_0407, aes(x=time, y= classification, color=as.factor(priority))) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Timeline of Error Messages on April 7th ", 
+       y = "Classification Type", 
+       x = "Time",
+       fill = "Priority Level") 
+
+#Timeline 
+t <- ggplot(IDS, aes(x=time, y= classification, color=as.factor(priority))) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Timeline of Error Messages on April 5 - 7 ", 
+       y = "Classification Type", 
+       x = "Time",
+       fill = "Priority Level") 
+
+ggplotly(t)
 
 #filter port 6667 by classification type 
 sourcePort_6667_0406 <- IDS_0406%>%
